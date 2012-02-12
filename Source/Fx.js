@@ -7,9 +7,18 @@ provides: Fx
 ...
 */
 
-(function(){
+define([
+	'Base/Class',
+	'Base/Class/Options',
+	'Base/Class/Events',
+	'Base/Accessor',
+	'Base/Utility/Object',
+	'Base/Host/Array',
+	'Base/Utility/typeOf',
+	'./Timer'
+], function(Class, Options, Events, Accessor, Object, Array, typeOf, Timer){
 
-var Fx = this.Fx = new Class({
+var Fx = new Class({
 
 	Implements: [Options, Events],
 
@@ -32,7 +41,7 @@ var Fx = this.Fx = new Class({
 		this.queue = [];
 		this.boundStep = this.step.bind(this);
 	},
-	
+
 	start: function(from, to){
 		if (!this.check(from, to)) return this;
 		this.from = from;
@@ -59,7 +68,7 @@ var Fx = this.Fx = new Class({
 		} else {
 			this.frame++;
 		}
-		
+
 		if (this.frame < this.frames){
 			var delta = this.equation(this.frame / this.frames);
 			this.render(this.compute(delta));
@@ -69,7 +78,7 @@ var Fx = this.Fx = new Class({
 			this.stop();
 		}
 	},
-	
+
 	stop: function(){
 		if (this.running()){
 			this.halt();
@@ -86,7 +95,7 @@ var Fx = this.Fx = new Class({
 		}
 		return this;
 	},
-	
+
 	pause: function(){
 		if (this.running()){
 			this.halt();
@@ -94,7 +103,7 @@ var Fx = this.Fx = new Class({
 		}
 		return this;
 	},
-	
+
 	resume: function(){
 		if ((this.frame < this.frames) && !this.running()){
 			this.timer.push(this.boundStep);
@@ -102,13 +111,13 @@ var Fx = this.Fx = new Class({
 		}
 		return this;
 	},
-	
+
 	running: function(){
 		return !!(this.timer && this.timer.running());
 	},
-	
+
 	// internal API
-	
+
 	'protected halt': function(){
 		if (this.running()){
 			this.time = null;
@@ -117,7 +126,7 @@ var Fx = this.Fx = new Class({
 		}
 		return this;
 	},
-	
+
 	'protected check': function(){
 		if (!this.running()) return true;
 		switch (this.getOption('behavior')){
@@ -126,11 +135,11 @@ var Fx = this.Fx = new Class({
 		}
 		return false;
 	},
-	
+
 	'protected compute': function(delta){
 		return Fx.compute(this.from, this.to, delta);
 	},
-	
+
 	'protected render': function(value){
 		return value;
 	}
@@ -172,11 +181,12 @@ var parseDuration = function(duration){
 	return n;
 };
 
-Fx.extend('compute', function(from, to, delta){
+Fx.compute = function(from, to, delta){
 	return (to - from) * delta + from;
-});
+};
 
-Fx.extend(new Accessor('Duration')).extend(new Accessor('Equation'));
+Object.append(Fx, new Accessor('Duration'));
+Object.append(Fx, new Accessor('Equation'));
 
 // duration
 
@@ -185,11 +195,11 @@ Fx.defineDurations({'short': 250, 'normal': 500, 'long': 1000});
 // equations
 
 Fx.defineEquations({
-	
+
 	'linear': function(p){
 		return p;
 	},
-	
+
 	'default': function(p){
 		return -(Math.cos(Math.PI * p) - 1) / 2;
 	},
@@ -233,10 +243,12 @@ Fx.defineEquations({
 
 });
 
-['quad', 'cubic', 'quart', 'quint'].each(function(name, i){
+Array.forEach(['quad', 'cubic', 'quart', 'quint'], function(name, i){
 	Fx.defineEquation(name, function(pos){
 		return Math.pow(pos, i + 2);
 	});
 });
 
-})();
+return Fx;
+
+});
